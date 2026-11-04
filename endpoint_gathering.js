@@ -128,16 +128,16 @@ async function readEndpoint(URL) {
                 
                 if(!gt.checkRestrainingOrderProtectedList(parsedData[i]['id'])) {
                     
-                    const bb = scom.pullSpecificSubjectFromDB(currentAggressorID)
+                    const bb = scom.pullSpecificSubjectFromDB(parsedData[i]['aggressorId'])
                     
                     if(bb.length === 0) {
-                        scom.addSubjectToDB(currentAggressorID, 2, null, false)
+                        scom.addSubjectToDB(parsedData[i]['aggressorId'], 2, null, false)
                     }   else {
-                        scom.updateSubjectInformation(2, gt.getIdFromGangList(bb[0]['gang_affiliated']), false, currentAggressorID)    
+                        scom.updateSubjectInformation(2, gt.getIdFromGangList(bb[0]['gang_affiliated']), false, parsedData[i]['aggressorId'])    
                     }
                     
                     let list = scom.pullRestrainingOrderFromDB()
-                    scom.addEntryToActiveRestrainingOrderOnDB((list.length + 1), parsedData[i]['id'], currentAggressorID)
+                    scom.addEntryToActiveRestrainingOrderOnDB((list.length + 1), parsedData[i]['id'], parsedData[i]['aggressorId'])
                 }
 
             }
@@ -166,24 +166,22 @@ async function readEndpoint(URL) {
                         let a = scom.pullSpecificSubjectFromDB(lastFive[x]['subject_id'])
                         let b = scom.pullSpecificSubjectFromDB(lastFive[z]['subject_id'])
 
-                        if(!gt.checkIfEncounterAlreadyHappened(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude']))
+                        if(!gt.checkIfEncounterAlreadyHappened(lastFive[x]['subject_id'], lastFive[z]['subject_id'], lastFive[x]['timestamp']))
                             if(a[0]['gang_affiliated'] != null && a[0]['gang_affiliated'] === b[0]['gang_affiliated']) {
 
-                                gt.registerProvenEncounters(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude'])
+                                gt.registerProvenEncounters(lastFive[x]['subject_id'], lastFive[z]['subject_id'], lastFive[x]['timestamp'])
                                 json_to_display.push(JSON.parse(gt.encounterAlert('gang meeting',lastFive[x]['timestamp'], a[0], b[0], lastFive[x], lastFive[z], eq.getHaversineDistance(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude']))))
                                 console.log(gt.encounterAlert('gang meeting',lastFive[x]['timestamp'], a[0], b[0], lastFive[x], lastFive[z], eq.getHaversineDistance(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude'])))
 
-                            } else if(a[0]['restraining_order'] || b[0]['restraining_order']) {
-                                if(gt.checkRestrainingOrderList(a[0], b[0])) {
+                            } else if(gt.checkRestrainingOrderList(a[0], b[0])) {
 
-                                        gt.registerProvenEncounters(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude'])
+                                        gt.registerProvenEncounters(lastFive[x]['subject_id'], lastFive[z]['subject_id'], lastFive[x]['timestamp'])
                                         json_to_display.push(JSON.parse(gt.encounterAlert('restraining order violation',lastFive[x]['timestamp'], a[0], b[0], lastFive[x], lastFive[z], eq.getHaversineDistance(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude']))))
                                         console.log(gt.encounterAlert('restraining order violation',lastFive[x]['timestamp'], a[0], b[0], lastFive[x], lastFive[z], eq.getHaversineDistance(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude'])))
 
-                                }
                             } else {
 
-                                gt.registerProvenEncounters(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude'])
+                                gt.registerProvenEncounters(lastFive[x]['subject_id'], lastFive[z]['subject_id'], lastFive[x]['timestamp'])
                                 json_to_display.push(JSON.parse(gt.encounterAlert('generic',lastFive[x]['timestamp'], a[0], b[0], lastFive[x], lastFive[z], eq.getHaversineDistance(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude']))))
                                 console.log(gt.encounterAlert('generic',lastFive[x]['timestamp'], a[0], b[0], lastFive[x], lastFive[z], eq.getHaversineDistance(lastFive[x]['Latitude'], lastFive[x]['Longitude'], lastFive[z]['Latitude'], lastFive[z]['Longitude'])))
 
@@ -210,7 +208,7 @@ async function readEndpoint(URL) {
 */
 
 
-readEndpoint('https://bucket-projeto-trainee.s3.sa-east-1.amazonaws.com/dataset1.txt')
+readEndpoint('https://bucket-projeto-trainee.s3.sa-east-1.amazonaws.com/dataset2.txt')
 
 module.exports = {
     readEndpoint,

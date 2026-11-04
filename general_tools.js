@@ -3,19 +3,23 @@ const scom = require('/home/nikolas/Documents/Project_for_Trainee/server_command
 const provenEncounter = []
 
 function checkRestrainingOrderList(a, b) {
-    let list = scom.pullRestrainingOrderFromDB()
+    let list = scom.pullRestrainingOrderFromDB();
 
     for(let i = 0; i < list.length; i++) {
-        if(a['id'] == list[i]['aggressor']) {
-            if(b['id'] == list[i]['protected']) {
-                return true
-            } else {
-                return false
-            }
+        const aIsAggressor =
+            a.id === list[i].aggressor &&
+            b.id === list[i].protected;
+
+        const bIsAggressor =
+            b.id === list[i].aggressor &&
+            a.id === list[i].protected;
+
+        if(aIsAggressor || bIsAggressor) {
+            return true;
         }
     }
 
-    return false
+    return false;
 }
 
 function checkRestrainingOrderProtectedList(a) {
@@ -66,11 +70,6 @@ function encounterAlert(type, timestamp, a, b, a_loc, b_loc, dist) {
     let a_id = a['id']
     let b_id = b['id']
 
-    if (a_id > b_id) {
-    [a_id, b_id] = [b_id, a_id]
-    [a_loc, b_loc] = [b_loc, a_loc]
-    }
-
     let json_object = {
         'tipo': message,
         'monitoradosEncontro': [a_id,b_id],
@@ -87,21 +86,25 @@ function encounterAlert(type, timestamp, a, b, a_loc, b_loc, dist) {
     return json_object
 }
 
-function registerProvenEncounters(lat_a, lon_a, lat_b, lon_b) {
+function registerProvenEncounters(person_a_id, person_b_id, timestamp) {
     provenEncounter.push({
-            'position_a': {'Latitude': lat_a, 'Longitude': lon_a},
-            'position_b': {'Latitude': lat_b, 'Longitude': lon_b}
+            'person_a_id': person_a_id,
+            'person_b_id': person_b_id,
+            'timestamp': timestamp,
         })
 }
 
-function checkIfEncounterAlreadyHappened(lat_a, lon_a, lat_b, lon_b) {
-    for(let x = 0; x < provenEncounter.length; x++) {
-        if(provenEncounter[x]['position_a']['Latitude'] === lat_a
-            && provenEncounter[x]['position_a']['Longitude'] === lon_a
-                && provenEncounter[x]['position_b']['Latitude'] === lat_b
-                    && provenEncounter[x]['position_b']['Longitude'] === lon_b) {
-                        return true
-        }
+function checkIfEncounterAlreadyHappened(person_a_id, person_b_id, timestamp) {
+
+    for(let i = 0; i < provenEncounter.length; i++) {
+        if((person_a_id === provenEncounter[i]['person_a_id'] && person_b_id === provenEncounter[i]['person_b_id'])
+            || (person_b_id === provenEncounter[i]['person_b_id'] && person_a_id === provenEncounter[i]['person_a_id'])) {
+                
+                if(timestamp === provenEncounter[i]['timestamp']){
+                    return true
+                }
+
+            }
     }
 
     return false
