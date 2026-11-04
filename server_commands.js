@@ -119,7 +119,7 @@ function pullLastFivePositionFromDB() {
     )
     WHERE position_rank = 1
     ORDER BY id DESC
-    LIMIT 5;`)
+    LIMIT 20;`)
 
     return dbc.all()
 }
