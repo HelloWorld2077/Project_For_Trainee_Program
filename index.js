@@ -1,7 +1,7 @@
 const http = require('node:http');
-const scom = require('/home/nikolas/Documents/Project_for_Trainee/server_commands')
-const ep = require('/home/nikolas/Documents/Project_for_Trainee/endpoint_gathering')
-const gt = require('/home/nikolas/Documents/Project_for_Trainee/general_tools')
+const scom = require('./server_commands')
+const ep = require('./endpoint_gathering')
+const gt = require('./general_tools')
 
 const hostname = '127.0.0.1';
 const port = 3000;
