@@ -1,84 +1,57 @@
-Olá esse é o projeto para o programa de Treinee!
+An explanation after the Trainee challenge deadline, It was my first doing anything like this so I'm actually glad to have participated.
 
-A lógica por trás do aplicativo na verdade é bem simples, nós primeiro precisamos de um banco de dados aonde podemos guardas as informações advindas do dataset,
-para podermos melhor gerenciar e manipular os dados.
+The code is basically a program which gathers info from an endpoint, then we organize that data using our database.
 
-Também tabelas para registrar quais são os subjects vigiados e a relação entre eles, temos uma tabela para registrar a relação entre usuário com medidas protetivas, ganges, tipos de pessoas.
+We basically each step, record the step into the database, check if the information belongs to someone already in the files and if not then proceed to create an entry.
 
-Em função da hora em que eu terminei esse projeto eu irei incluir uma resumo feito com IA para explicar o programa:
+Then we verify a few things from the subject based on the info give(such as, should this person be on the Active Restraining Order(ARO) file, should we sign this person as
+a potential aggressor due to gang related activities and so on).
 
-# Sistema de Identificação de Encontros entre Monitorados
+Then we actually create the entry within the database a verify if that person has any relation to someone with in the ARO file, if yes we mark that either as the offender or the protected one
+and create an entry to represent this relation on the DB on another table.
 
-## 1. Lógica utilizada
+We then proceed to check the last 5 or in the current version of the code, the last 20 entries for any subjects that within 20 meters from each in order to crate an alert.
 
-O projeto foi desenvolvido utilizando JavaScript com Node.js e SQLite para armazenamento e consulta dos dados.
+If we find that is the case, then we register the encounter for future reference and send the alert, restarting the process in a new line.
 
-O objetivo principal é identificar possíveis encontros entre pessoas monitoradas, considerando suas posições geográficas, e classificá-los de acordo com as informações disponíveis sobre cada indivíduo.
+You'll see that we're basically putting most of this logic within a async function, this is for simplicity. You can also see that I've organized most functions in different files.
 
-Inicialmente, o sistema obtém os dados de entrada e realiza a separação das informações utilizando o delimitador `;`. Esses dados são organizados e armazenados no banco de dados SQLite, permitindo consultar os indivíduos monitorados e suas respectivas posições.
+For example:
 
-Para identificar os encontros, o sistema compara as posições dos indivíduos, considerando apenas registros que possuam o mesmo timestamp. Dessa forma, são comparadas posições referentes ao mesmo instante, evitando identificar como encontro situações em que os indivíduos estavam próximos em momentos diferentes.
+you'll find the required equation to calculate the distance between two subjects in the equation file, functions to handle server queries in the server command file, even the
+main method which enables all those checks is located on the endpoint gathering file alluding to its function.
 
-A distância entre duas posições geográficas é calculada utilizando a fórmula de Haversine, considerando o raio médio da Terra de 6.371.000 metros. Caso a distância calculada seja inferior a 20 metros, o sistema considera que existe um encontro entre os indivíduos.
+This creates a more organized code base, which is much better to work with.
 
-Após identificar um encontro, o sistema verifica as informações dos envolvidos para determinar sua classificação:
+We use the Haverside equation to calculate the point between both subjects based on their coordinates, which we gather from the endpoint and register on the database.
 
-- **Genérico:** utilizado quando não existe uma relação específica entre os indivíduos que justifique outra classificação.
-- **Facção:** utilizado quando os dois indivíduos pertencem à mesma facção.
-- **Protetiva:** utilizado quando existe uma medida protetiva registrada entre os indivíduos, considerando a relação entre agressor e pessoa protegida.
+Based on that equation we confirm that an encounter is happening and then we define the type of encounter based on the subjects entry.
 
-A verificação das medidas protetivas considera as duas possíveis ordens dos indivíduos na comparação. Assim, a identificação continua funcionando independentemente de qual deles aparece primeiro no processo de comparação.
+Two gang members? Gang meeting
 
-Também foi implementado um mecanismo para evitar a geração de alertas duplicados. Para isso, o sistema mantém um registro dos encontros já identificados, considerando os identificadores dos dois indivíduos e o timestamp. Dessa maneira, a mesma combinação de pessoas não gera múltiplos alertas para o mesmo instante, mesmo que a ordem dos identificadores seja invertida.
+An aggressor breaking an ARO? Violation of RO.
 
-Por fim, os encontros identificados são organizados em objetos JSON contendo o tipo de alerta, os identificadores dos indivíduos envolvidos, o timestamp, as coordenadas geográficas de cada um e a distância calculada em metros.
+Anything else? generic encounter.
 
-## 2. Organização do projeto
+The concept is quite simple, it sure is something interesting to implement. you'll see that the first method within the endpoint gathering is the parseSemicolumn, we use that to
+Organize the .txt input we've received into variables by breaking each section into columns using the semi columns as a reference.
 
-O projeto foi dividido em arquivos com responsabilidades distintas, facilitando a manutenção e a compreensão do código.
+I had a bit of trouble when using it since we have a case where there will be an additional element, which would be the aggressorID(id from the ARO registered aggressor) which is within
+quotation mark and doesn't have the semicolumn, that caused a bit of trouble to figure out.
 
-- **index.js:** responsável por iniciar o servidor HTTP e disponibilizar a aplicação.
-- **endpoint_gathering.js:** responsável por obter os dados de entrada, processar as informações e realizar as comparações entre as posições dos indivíduos.
-- **server_commands.js:** concentra as operações relacionadas ao banco de dados SQLite.
-- **equation.js:** contém a implementação da fórmula de Haversine, utilizada para calcular a distância entre duas coordenadas geográficas.
-- **general_tools.js:** reúne funções auxiliares utilizadas na classificação dos encontros, verificação das medidas protetivas, controle de duplicidade e organização dos resultados JSON.
+We basically check that but before we proceed, we check the last semi column then the first quotation mark after that and the last one - the content within that quotation mark is the
+aggressor id - then we consider everything outside of that to be from the next line.
 
-Essa separação permite que cada parte do sistema tenha uma responsabilidade específica, evitando concentrar toda a lógica em um único arquivo.
+we kind go character by character to check these, through that we can divide each segment into a variable that we can use later in the code.
 
-## 3. Como executar o projeto
+We also have some loops at the end of the endpoint gathering logic worth discussing, we basically run through the last steps taken in the DB and check if there was an encounter.
+If there was we register, if not we proceed.
 
-Para executar o projeto, é necessário ter o Node.js instalado e acessar o diretório em que os arquivos da aplicação estão localizados.
+We register the encounter in a variable to check later, so we don't register again an encounter and proceed to find new encounters.
 
-Caso o projeto possua um arquivo `package.json` com suas dependências declaradas, elas podem ser instaladas utilizando:
+There are some functions specific to work with the ARO list, the encounter registry and one we use to output the results which you'll find on the general_tools file.
 
-```bash
-npm install
-```
+Ironically the index is the least used file here, it's our main method for sure starting the routing for our app but we don't run anything directly there that is worth
+to mention.
 
-Após a instalação, o servidor pode ser iniciado utilizando:
 
-```bash
-node index.js
-```
-
-O servidor HTTP utiliza a porta 3000. Portanto, após sua inicialização, a aplicação poderá ser acessada localmente por meio de:
-
-```text
-http://localhost:3000
-```
-
-O processamento dos dados e a disponibilização dos resultados seguem o fluxo implementado na aplicação. Caso exista uma rota específica para consultar os resultados, ela deverá ser utilizada conforme definida no arquivo `index.js`.
-
-## 4. Por que considero esta a melhor abordagem
-
-Considerei essa abordagem adequada porque ela permite dividir um problema relativamente complexo em etapas menores e mais fáceis de compreender e manter.
-
-A utilização do SQLite permite armazenar e consultar os dados sem a necessidade de configurar um servidor de banco de dados independente, enquanto o Node.js oferece os recursos necessários para processar as informações e disponibilizar os resultados.
-
-A implementação da fórmula de Haversine permite calcular distâncias geográficas levando em consideração a curvatura da Terra, sendo mais apropriada para esse tipo de comparação do que utilizar uma simples distância entre coordenadas.
-
-Outro ponto importante é a separação das responsabilidades entre os arquivos. Isso facilita futuras alterações, como modificar a forma de obtenção dos dados, aprimorar as consultas ao banco ou adicionar novas classificações de encontros, sem precisar reescrever toda a aplicação.
-
-Por fim, o controle de encontros duplicados e a verificação das relações entre os indivíduos ajudam a garantir que os alertas gerados sejam consistentes com as regras estabelecidas pelo problema.
-
-Dessa forma, considero que a solução atende aos requisitos propostos utilizando uma estrutura relativamente simples, modular e que permite futuras melhorias sem adicionar complexidade desnecessária ao projeto.
