@@ -1,6 +1,6 @@
-const scom = require('/home/nikolas/Documents/Project_for_Trainee/server_commands')
-const eq = require('/home/nikolas/Documents/Project_for_Trainee/equation')
-const gt = require('/home/nikolas/Documents/Project_for_Trainee/general_tools')
+const scom = require('./server_commands')
+const eq = require('./equation')
+const gt = require('./general_tools')
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
