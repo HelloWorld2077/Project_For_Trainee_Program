@@ -1,4 +1,4 @@
-const scom = require('/home/nikolas/Documents/Project_for_Trainee/server_commands')
+const scom = require('./server_commands')
 
 const provenEncounter = []
 
